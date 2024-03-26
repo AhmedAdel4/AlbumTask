@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AlbumRequest;
+use App\Http\Requests\moveImagesRequest;
 use App\Http\Requests\PhotoRequest;
 use App\Models\Album;
 use App\Services\AlbumService;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -13,10 +15,12 @@ class AlbumController extends Controller
 {
 
     protected $albumService;
+    protected $imageService;
 
-    public function __construct(AlbumService $albumService)
+    public function __construct(AlbumService $albumService, ImageService $imageService)
     {
         $this->albumService = $albumService;
+        $this->imageService = $imageService;
     }
 
     /**
@@ -25,7 +29,7 @@ class AlbumController extends Controller
     public function index()
     {
         $albums = $this->albumService->index();
-        return view('album.index',compact('albums'));
+        return view('album.index', compact('albums'));
     }
 
     /**
@@ -42,7 +46,7 @@ class AlbumController extends Controller
     public function store(AlbumRequest $request)
     {
         $this->albumService->store($request->validated());
-        return redirect(route('albums.index'))->with('success',__('site.DataSaved'));
+        return redirect(route('albums.index'))->with('success', __('site.DataSaved'));
     }
 
 
@@ -60,10 +64,6 @@ class AlbumController extends Controller
         return view('album.upload', ['album' => $album]);
     }
 
-    public function storeImage(PhotoRequest $request)
-    {
-        $request->validated();
-    }
 
     /**
      * Update the specified resource in storage.
@@ -71,7 +71,7 @@ class AlbumController extends Controller
     public function update(AlbumRequest $request, Album $album)
     {
         $this->albumService->update($request->validated(), $album);
-        return redirect(route('albums.index'))->with('success',__('site.DataUpdated'));
+        return redirect(route('albums.index'))->with('success', __('site.DataUpdated'));
     }
 
     /**
@@ -80,6 +80,34 @@ class AlbumController extends Controller
     public function destroy(Album $album)
     {
         $this->albumService->destroy($album);
-        return redirect()->back()->with('success',__('site.DataDeleted'));
+        return redirect()->back()->with('success', __('site.DataDeleted'));
+    }
+
+    public function storeImage(PhotoRequest $request)
+    {
+        $album = $this->albumService->find($request->validated()['albumId']);
+        $response = $this->imageService->store($request->validated(), $album);
+        return response()->json(['id' => $response]);
+    }
+
+
+    public function storeMovedImages(moveImagesRequest $request)
+    {
+        $response = $this->albumService->moveImages($request->validated());
+        return redirect(route('albums.index'))->with('success', __('site.DataUpdated'));
+    }
+
+    public function deleteImage($fileId)
+    {
+        $response = $this->imageService->delete($fileId);
+        return response()->json(['message' => 'deleted successfully']);
+    }
+
+    public function moveImages($albumId)
+    {
+        $albums = $this->albumService->all()->except($albumId);
+        if (count($albums) > 0)
+            return view('album.chooseAlbum', ['albums' => $albums, 'oldAlbumId' => $albumId]);
+        return redirect(route('albums.index'))->with('success', __('site.NoAlbumsFound'));
     }
 }

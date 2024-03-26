@@ -14,4 +14,9 @@ class Picture extends Model
         'album_id'
     ];
 
+
+    public function album()
+    {
+        return $this->belongsTo(Album::class);
+    }
 }

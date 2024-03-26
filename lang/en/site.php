@@ -21,11 +21,14 @@ return [
     'UploadImage' => '(Max uploaded image size 2MB of type [jpg,jpeg,png] )',
     'Save' => 'Save',
     'Edit' => 'Edit',
+    'Choose' => 'Choose',
+    'Back' => 'Back',
     'Delete' => 'Delete',
     'DataSaved' => 'Data saved successfully',
     'DataRetrieved' => 'Data retrieved successfully',
     'DataUpdated' => 'Data updated successfully',
     'DataCreated' => 'Data created successfully',
     'DataDeleted' => 'Data deleted successfully',
+    'NoAlbumsFound' => 'No Albums Found',
 
 ];

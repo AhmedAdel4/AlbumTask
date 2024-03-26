@@ -26,9 +26,13 @@
                                 <td style="background-color: #dbc9c9">{{ $loop->index + 1 }}</td>
                                 <td style="background-color: #dbc9c9">{{ $album->name }}</td>
                                 <td style="background-color: #dbc9c9">
-                                    <a href="{{ route('albums.Images', $album) }}" class="btn btn-sm btn-primary" style="margin-right: 5px;">
+                                    <a href="{{ route('albums.Images', $album) }}" class="btn btn-sm btn-primary"
+                                        style="margin-right: 5px;">
                                         <span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus mr-50">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                class="feather feather-plus mr-50">
                                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                                             </svg>
@@ -50,13 +54,13 @@
                                         <span>@lang('site.Edit')</span>
                                     </a>
 
-                                    <!-- Delete Button -->
-                                    <form action="{{ route('albums.destroy', $album) }}" method="POST"
+
+                                    <form id="deleteAlbumForm" action="{{ route('albums.destroy', $album) }}" method="POST"
                                         style="display: inline;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" style="background-color: #dc3545"
-                                            class="btn btn-sm btn-danger">
+                                        <button type="button" onclick="confirmDelete({{ $album->media->count() }},{{ $album->id }})"
+                                            style="background-color: #dc3545" class="btn btn-sm btn-danger">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round"
@@ -83,4 +87,47 @@
             @endif
         </div>
     </div>
+    {{ $albums->links('pagination::bootstrap-4') }}
+@endsection
+
+
+@section('js')
+    <script>
+        function confirmDelete(count,albumId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (count > 0) {
+                        Swal.fire({
+                            title: 'What about the images?',
+                            text: "Do you want to delete the images or move them to another album?",
+                            icon: 'question',
+                            showDenyButton: true,
+                            showCancelButton: true,
+                            confirmButtonText: 'Delete Images',
+                            denyButtonText: `Move Images`,
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.getElementById('deleteAlbumForm').submit();
+                            } else if (result.isDenied) {
+                                window.location.href = "{{ route('albums.moveImages', ['albumId' => ':id']) }}".replace(':id', albumId);
+                            }
+                        });
+                    }
+                    else
+                    {
+                        document.getElementById('deleteAlbumForm').submit(); // Ensure your form has an ID
+                    }
+
+                }
+            });
+        }
+    </script>
 @endsection

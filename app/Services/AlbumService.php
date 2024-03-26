@@ -4,7 +4,7 @@ namespace App\Services;
 
 
 use App\Repositories\AlbumRepositoryInterface;
-
+use Exception;
 
 class AlbumService
 {
@@ -21,25 +21,55 @@ class AlbumService
         return $this->albumRepository->orderby('created_at', 'DESC')->paginate(20);
     }
 
+    public function all()
+    {
+        return $this->albumRepository->all();
+    }
+
+    public function find($id)
+    {
+        return $this->albumRepository->find($id);
+    }
+
     public function store($data)
     {
-        $logo = $this->albumRepository->create($data);
-        if (isset($data['file'])) {
-            $logo->addMedia($data['file'])->toMediaCollection('logo');
+        $this->albumRepository->create($data);
+    }
+
+    public function moveImages($data)
+    {
+        try {
+            $album_id = $data['album_id'];
+            $oldAlbumId = $data['oldAlbumId'];
+
+            $oldAlbum = $this->find($oldAlbumId);
+
+            $mediaItems = $oldAlbum->media;
+            foreach ($mediaItems as $mediaItem) {
+                $mediaItem->model_id = $album_id;
+                $mediaItem->save();
+            }
+
+            $pictures = $oldAlbum->pictures;
+
+            foreach ($pictures as $picture) {
+                $picture->album_id = $album_id;
+                $picture->save();
+            }
+            $this->destroy($oldAlbum);
+            return true;
+        } catch (Exception $e) {
+            return false;
         }
     }
 
-    public function update($data, $logo)
+    public function update($data, $album)
     {
-        $logo = $this->albumRepository->update($data, $logo);
-        if (isset($data['file'])) {
-            $logo->clearMediaCollection('logo');
-            $logo->addMedia($data['file'])->toMediaCollection('logo');
-        }
+        $album = $this->albumRepository->update($data, $album);
     }
 
-    public function destroy($logo)
+    public function destroy($album)
     {
-        $this->albumRepository->delete($logo);
+        $this->albumRepository->delete($album);
     }
 }
